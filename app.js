@@ -6,61 +6,64 @@ L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
 const regex = RegExp('California');
 const wildfireList = document.querySelector('#wildfire-list');
 let wildfireItems
+let markerArr = []
 
 async function getData(){
 //fetches wildfire data from nasa in json
     const response = await fetch('https://eonet.sci.gsfc.nasa.gov/api/v2.1/categories/8');
     const data = await response.json();
-
     const wildfireEvents = data.events
-    console.log(wildfireEvents)
-   for(i = 0; i < data.events.length; i++){
+
+    for(i = 0; i < data.events.length; i++){
     const wildfireEventsXCoordinate = data.events[i].geometries[0].coordinates[1]
     const wildfireEventsYCoordinate = data.events[i].geometries[0].coordinates[0]
 
-        if(regex.test(wildfireEvents[i].title) && wildfireEventsXCoordinate < 35) {
-           
-            var marker = L.marker([wildfireEventsXCoordinate,wildfireEventsYCoordinate]).addTo(mymap);
+        if(true) {
+            //this belongs in the if statement
+            //regex.test(wildfireEvents[i].title) && wildfireEventsXCoordinate < 35
+            var marker = new L.marker([wildfireEventsXCoordinate, wildfireEventsYCoordinate]).addTo(mymap);
             marker.bindPopup(wildfireEvents[i].title)
             marker.on('click', highlightSelectedWildfireItem);
+            markerArr.push(marker)
             createElements(wildfireEvents[i].title, i + 1);
+
         }
     }
-}
 
-function createElements(title, number){
-// creates new paragraph element as a child to the wildfire list div and inserts text
-    const newParagraph = document.createElement('p');
-    const newText = document.createTextNode(title);
-    
-    wildfireList.appendChild(newParagraph);
-    newParagraph.appendChild(newText);
-    newParagraph.classList.add(`wildfire-${number}`);
-    newParagraph.classList.add('wildfire-item');
-    newParagraph.addEventListener('click', centerMap)
-}
-
-
-function centerMap(){
-// when clicking on a wildfire item, the map will move to the coordinates of that item and open a popup
-    const wildfirePopups = Object.values(mymap._layers);
-    
-    wildfireItems = document.querySelectorAll('.wildfire-item');
-    wildfireItems.forEach(item => item.classList.remove('wildfire-item-border'));
-    this.classList.add('wildfire-item-border');
-
-    for(i = 1; i < wildfirePopups.length; i++){
-        const chosenWildfireLat = Object.values(mymap._layers)[i]._latlng.lat
-        const chosenWildfireLng = Object.values(mymap._layers)[i]._latlng.lng
-        const chosenWildfirePopupContent = Object.values(mymap._layers)[i]._popup._content
-
-        if(this.innerText == chosenWildfirePopupContent){
-            mymap.setView([chosenWildfireLat, chosenWildfireLng], 13)
-            mymap.openPopup(chosenWildfirePopupContent, [chosenWildfireLat, chosenWildfireLng])
+    function createElements(title, number){
+        // creates new paragraph element as a child to the wildfire list div and inserts text
+            const newParagraph = document.createElement('p');
+            const newText = document.createTextNode(title);
+            
+            wildfireList.appendChild(newParagraph);
+            newParagraph.appendChild(newText);
+            newParagraph.classList.add(`wildfire-${number}`, 'wildfire-item');
+            newParagraph.addEventListener('click', centerMap)
         }
-    }
-    
+        
+        
+        function centerMap(){
+        // when clicking on a wildfire item, the map will move to the coordinates of that item and open a popup
+            wildfireItems = document.querySelectorAll('.wildfire-item');
+            wildfireItems.forEach(item => item.classList.remove('wildfire-item-border'));
+            this.classList.add('wildfire-item-border');
+        
+            for(i = 0; i < markerArr.length; i++){
+                const wildfirePopups = markerArr[i]._popup._content
+                const chosenWildfireLat = markerArr[i]._latlng.lat
+                const chosenWildfireLng =  markerArr[i]._latlng.lng
+
+                if(this.innerText == wildfirePopups){
+                    mymap.setView([chosenWildfireLat, chosenWildfireLng], 13)
+                    markerArr[i].openPopup()
+                }
+            }   
+
+            console.log(markerArr[3])
+        }
 }
+
+
 
 function highlightSelectedWildfireItem(e){
 // by clicking a marker, the wildfire item in the wildfire list corresponding to the marker is highlighted
