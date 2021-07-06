@@ -1,12 +1,37 @@
-var mymap = L.map('mapid').setView([34.0522, -118.2437], 9)
+const searchButton = document.querySelector('.search-button')
+let latitude = -118
+let longitude = 34
+var mymap = L.map('mapid').setView([longitude, latitude], 9)
 L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
     attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>',
     maxZoom: 13
 }).addTo(mymap);
-const regex = RegExp('California');
+const mapBoxAuthToken = 'pk.eyJ1IjoiYW5kcmV3ZHlxdWlhMSIsImEiOiJja3FxYmRldzUxYngxMnhzYnczemx3dWNxIn0.tqOwapc6rVt23F1atNIrWw'
 const wildfireList = document.querySelector('#wildfire-list');
 let wildfireItems
 let markerArr = []
+
+async function mapBoxData(){
+    //fetches wildfire data from nasa in json
+        const searchInput = document.querySelector('.search-input')
+        let zipCode = 92867
+
+        if(searchInput.value == ''){
+            alert('please enter a zipcode')
+        } else{
+            zipCode = searchInput.value
+            searchInput.value = ''
+        }
+
+        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?access_token=${mapBoxAuthToken}`);
+        const data = await response.json();
+        const zipCodeLat = data.features[0].center[1]
+        const zipCodeLong = data.features[0].center[0]
+        
+        latitude = zipCodeLat
+        longitude = zipCodeLong
+        mymap.setView([longitude, latitude])
+}
 
 async function getData(){
 //fetches wildfire data from nasa in json
@@ -63,8 +88,6 @@ async function getData(){
         }
 }
 
-
-
 function highlightSelectedWildfireItem(e){
 // by clicking a marker, the wildfire item in the wildfire list corresponding to the marker is highlighted
     wildfireItems = document.querySelectorAll('.wildfire-item');
@@ -97,9 +120,7 @@ function cancelHighlight(e){
 
 
 window.addEventListener('click', cancelHighlight);
-
-
-
+searchButton.addEventListener('click', mapBoxData)
 getData()
 //refreshes page every hour
 setInterval(function(){ location.reload()}, 3600000)    
