@@ -1,60 +1,79 @@
-const searchButton = document.querySelector('.search-button')
-let latitude = -118
-let longitude = 34
-var mymap = L.map('mapid').setView([longitude, latitude], 9)
+const searchButton = document.querySelector('.search-button'), wildfireList = document.querySelector('#wildfire-list');
+let longitude = -118, latitude = 34
+//let markerLat = latitude, markerLong = longitude
+var mymap = L.map('mapid').setView([latitude, longitude], 9)
+var circle = L.circle([latitude, longitude], {radius: 600000})
+let marker
+var markersLayer = new L.LayerGroup();
 L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
     attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>',
     maxZoom: 13
 }).addTo(mymap);
 const mapBoxAuthToken = 'pk.eyJ1IjoiYW5kcmV3ZHlxdWlhMSIsImEiOiJja3FxYmRldzUxYngxMnhzYnczemx3dWNxIn0.tqOwapc6rVt23F1atNIrWw'
-const wildfireList = document.querySelector('#wildfire-list');
 let wildfireItems
 let markerArr = []
 
-async function mapBoxData(){
-    //fetches wildfire data from nasa in json
+async function getMapBoxData(){
         const searchInput = document.querySelector('.search-input')
         let zipCode = 92867
 
-        if(searchInput.value == ''){
-            alert('please enter a zipcode')
-        } else{
-            zipCode = searchInput.value
-            searchInput.value = ''
-        }
-
+        assignValue()
+        
         const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?access_token=${mapBoxAuthToken}`);
         const data = await response.json();
         const zipCodeLat = data.features[0].center[1]
         const zipCodeLong = data.features[0].center[0]
+
+        function assignValue(){
+            if(searchInput.value == ''){
+                alert('please enter a zipcode')
+                return
+            } else{
+                zipCode = searchInput.value
+                searchInput.value = ''
+            }
+        }
         
         latitude = zipCodeLat
         longitude = zipCodeLong
-        mymap.setView([longitude, latitude])
+        mymap.setView([latitude, longitude])
+        markersLayer.clearLayers()
+        getWildfireData(true)
 }
 
-async function getData(){
+async function getWildfireData(filtered){
 //fetches wildfire data from nasa in json
     const response = await fetch('https://eonet.sci.gsfc.nasa.gov/api/v2.1/categories/8');
     const data = await response.json();
     const wildfireEvents = data.events
+    const filteredEvents = wildfireEvents.filter(event => event.geometries[0].coordinates[1] > latitude - 1 && event.geometries[0].coordinates[1] < latitude + 1 && event.geometries[0].coordinates[0] > longitude - 1 && event.geometries[0].coordinates[0] < longitude + 1)
 
-    for(i = 0; i < data.events.length; i++){
-    const wildfireEventsXCoordinate = data.events[i].geometries[0].coordinates[1]
-    const wildfireEventsYCoordinate = data.events[i].geometries[0].coordinates[0]
-
-        if(true) {
-            //this belongs in the if statement
-            //regex.test(wildfireEvents[i].title) && wildfireEventsXCoordinate < 35
-            var marker = new L.marker([wildfireEventsXCoordinate, wildfireEventsYCoordinate]).addTo(mymap);
-            marker.bindPopup(wildfireEvents[i].title)
-            marker.on('click', highlightSelectedWildfireItem);
-            markerArr.push(marker)
-            createElements(wildfireEvents[i].title, i + 1);
-
-        }
+    console.log(filteredEvents, 'filtered')
+    console.log(wildfireEvents)
+    if(filtered){
+        addMarker(filteredEvents)
+    } else{
+        addMarker(wildfireEvents)
     }
 
+    markersLayer.addTo(mymap)
+
+    function addMarker(events){
+
+        for(i = 0; i < events.length; i++){
+                const wildfireEventsLat = events[i].geometries[0].coordinates[1]
+                const wildfireEventsLong = events[i].geometries[0].coordinates[0]
+                //addMarker(wildfireEventsLat, wildfireEventsLong, highlightSelectedWildfireItem, wildfireEvents[i].title)
+                //latitude = lat, longitude = long
+                marker = L.marker([wildfireEventsLat, wildfireEventsLong])
+                marker.bindPopup(wildfireEvents[i].title)
+                marker.on('click', highlightSelectedWildfireItem);
+                markersLayer.addLayer(marker)
+                markerArr.push(marker)
+                createElements(events[i].title, i + 1);
+        }
+        
+    }
     function createElements(title, number){
         // creates new paragraph element as a child to the wildfire list div and inserts text
             const newParagraph = document.createElement('p');
@@ -73,13 +92,15 @@ async function getData(){
             wildfireItems.forEach(item => item.classList.remove('wildfire-item-border'));
             this.classList.add('wildfire-item-border');
         
+            
             for(i = 0; i < markerArr.length; i++){
                 const wildfirePopups = markerArr[i]._popup._content
                 const chosenWildfireLat = markerArr[i]._latlng.lat
                 const chosenWildfireLng =  markerArr[i]._latlng.lng
 
+                //checks wildfire paragraph text and compares it with popup text
                 if(this.innerText == wildfirePopups){
-                    mymap.setView([chosenWildfireLat, chosenWildfireLng], 13)
+                    mymap.setView([chosenWildfireLat, chosenWildfireLng], 13)//if text matches, move map to matched marker's location via latitude and longitude
                     markerArr[i].openPopup()
                 }
             }   
@@ -118,9 +139,24 @@ function cancelHighlight(e){
     }
 }
 
-
 window.addEventListener('click', cancelHighlight);
-searchButton.addEventListener('click', mapBoxData)
-getData()
+// ['click','keydown'].forEach( evt => 
+//     searchButton.addEventListener(evt, getMapBoxData, false)
+// );
+searchButton.addEventListener('click', getMapBoxData)
+getWildfireData(false)
 //refreshes page every hour
-setInterval(function(){ location.reload()}, 3600000)    
+setInterval(function(){ location.reload()}, 3600000)
+
+
+
+
+
+
+
+
+//THINGS TO DO
+
+//Limit markers to within a (50?) mile radius of searched zip code
+//Have something to show in the wildfire list if no wildfires are found in searched radius
+//Remove markers when a new search is conducted
