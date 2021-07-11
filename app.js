@@ -38,6 +38,12 @@ async function getMapBoxData(){
         longitude = zipCodeLong
         mymap.setView([latitude, longitude])
         markersLayer.clearLayers()
+
+        //remove all child elements in wildfire list container
+        while(wildfireList.firstChild) {
+            wildfireList.removeChild(wildfireList.lastChild)
+        }
+
         getWildfireData(true)
 }
 
@@ -48,10 +54,9 @@ async function getWildfireData(filtered){
     const wildfireEvents = data.events
     const filteredEvents = wildfireEvents.filter(event => event.geometries[0].coordinates[1] > latitude - 1 && event.geometries[0].coordinates[1] < latitude + 1 && event.geometries[0].coordinates[0] > longitude - 1 && event.geometries[0].coordinates[0] < longitude + 1)
 
-    console.log(filteredEvents, 'filtered')
-    console.log(wildfireEvents)
     if(filtered){
         addMarker(filteredEvents)
+        console.log('filtered')
     } else{
         addMarker(wildfireEvents)
     }
@@ -157,6 +162,5 @@ setInterval(function(){ location.reload()}, 3600000)
 
 //THINGS TO DO
 
-//Limit markers to within a (50?) mile radius of searched zip code
 //Have something to show in the wildfire list if no wildfires are found in searched radius
-//Remove markers when a new search is conducted
+//Reset wildfire list when conducting a zip code search

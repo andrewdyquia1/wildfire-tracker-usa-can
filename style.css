@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
+
 *{
     padding: 0;
     margin: 0;
@@ -9,11 +10,13 @@
 
 body{
     width: 100%;
+    
 }
 
 .container{
     width: 90%;
     text-align: center;
+    margin: 0 auto;
 }
 
 .container > * {
@@ -26,14 +29,14 @@ body{
 
 #mapid{
     margin-top: 2rem;
-    height: 700px;
-    width: 700px;
+    height: 60vw;
+    width: 60vw;
 }
 
 #wildfire-list{
     margin: 0 auto;
     margin-top: 2rem;
-    width: 700px;
+    width: 80vw;
 }
 
 #wildfire-list p{
