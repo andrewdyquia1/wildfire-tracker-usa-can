@@ -1,4 +1,4 @@
-const searchButton = document.querySelector('.search-button'), wildfireList = document.querySelector('#wildfire-list');
+const searchButton = document.querySelector('.search-button'), showAllButton = document.querySelector('.search-all-button'), wildfireList = document.querySelector('#wildfire-list');
 let longitude = -118, latitude = 34
 //let markerLat = latitude, markerLong = longitude
 var mymap = L.map('mapid').setView([latitude, longitude], 9)
@@ -56,62 +56,68 @@ async function getWildfireData(filtered){
 
     if(filtered){
         addMarker(filteredEvents)
-        console.log('filtered')
-    } else{
+    } else {
         addMarker(wildfireEvents)
     }
 
     markersLayer.addTo(mymap)
+
+
+    if(wildfireList.children.length == 0){
+        createElements('There are no wildfires. When you search, make sure you add a valid zip code.', true)
+    }
 
     function addMarker(events){
 
         for(i = 0; i < events.length; i++){
                 const wildfireEventsLat = events[i].geometries[0].coordinates[1]
                 const wildfireEventsLong = events[i].geometries[0].coordinates[0]
-                //addMarker(wildfireEventsLat, wildfireEventsLong, highlightSelectedWildfireItem, wildfireEvents[i].title)
-                //latitude = lat, longitude = long
-                marker = L.marker([wildfireEventsLat, wildfireEventsLong])
-                marker.bindPopup(wildfireEvents[i].title)
-                marker.on('click', highlightSelectedWildfireItem);
-                markersLayer.addLayer(marker)
+
+                marker = L.marker([wildfireEventsLat, wildfireEventsLong])//create new marker object
+                marker.bindPopup(wildfireEvents[i].title)//bind popup onto marker
+                marker.on('click', highlightSelectedWildfireItem);//add click event listener to marker
+                markersLayer.addLayer(marker)//add marker to layer group
                 markerArr.push(marker)
-                createElements(events[i].title, i + 1);
+                createElements(events[i].title, false);//create paragraph element
         }
-        
     }
-    function createElements(title, number){
+
+    function createElements(title, noWildfires){
         // creates new paragraph element as a child to the wildfire list div and inserts text
             const newParagraph = document.createElement('p');
             const newText = document.createTextNode(title);
             
             wildfireList.appendChild(newParagraph);
             newParagraph.appendChild(newText);
-            newParagraph.classList.add(`wildfire-${number}`, 'wildfire-item');
-            newParagraph.addEventListener('click', centerMap)
+            newParagraph.classList.add('wildfire-item');
+            if(noWildfires){
+                return
+            } else {
+                newParagraph.addEventListener('click', centerMap)
+            }
+            
         }
         
         
-        function centerMap(){
-        // when clicking on a wildfire item, the map will move to the coordinates of that item and open a popup
-            wildfireItems = document.querySelectorAll('.wildfire-item');
-            wildfireItems.forEach(item => item.classList.remove('wildfire-item-border'));
-            this.classList.add('wildfire-item-border');
+    function centerMap(){
+    // when clicking on a wildfire item, the map will move to the coordinates of that item and open a popup
+        wildfireItems = document.querySelectorAll('.wildfire-item');
+        wildfireItems.forEach(item => item.classList.remove('wildfire-item-border'));
+        this.classList.add('wildfire-item-border');
         
             
-            for(i = 0; i < markerArr.length; i++){
-                const wildfirePopups = markerArr[i]._popup._content
-                const chosenWildfireLat = markerArr[i]._latlng.lat
-                const chosenWildfireLng =  markerArr[i]._latlng.lng
+        for(i = 0; i < markerArr.length; i++){
+            const wildfirePopups = markerArr[i]._popup._content
+            const chosenWildfireLat = markerArr[i]._latlng.lat
+            const chosenWildfireLng =  markerArr[i]._latlng.lng
 
-                //checks wildfire paragraph text and compares it with popup text
-                if(this.innerText == wildfirePopups){
-                    mymap.setView([chosenWildfireLat, chosenWildfireLng], 13)//if text matches, move map to matched marker's location via latitude and longitude
-                    markerArr[i].openPopup()
-                }
-            }   
-
-            console.log(markerArr[3])
-        }
+            //checks wildfire paragraph text and compares it with popup text
+            if(this.innerText == wildfirePopups){
+                mymap.setView([chosenWildfireLat, chosenWildfireLng], 13)//if text matches, move map to matched marker's location via latitude and longitude
+                markerArr[i].openPopup()
+            }
+        }   
+    }
 }
 
 function highlightSelectedWildfireItem(e){
@@ -149,6 +155,7 @@ window.addEventListener('click', cancelHighlight);
 //     searchButton.addEventListener(evt, getMapBoxData, false)
 // );
 searchButton.addEventListener('click', getMapBoxData)
+showAllButton.addEventListener('click', getWildfireData)
 getWildfireData(false)
 //refreshes page every hour
 setInterval(function(){ location.reload()}, 3600000)
