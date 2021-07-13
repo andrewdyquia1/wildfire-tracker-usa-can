@@ -1,8 +1,6 @@
-const searchButton = document.querySelector('.search-button'), showAllButton = document.querySelector('.search-all-button'), wildfireList = document.querySelector('#wildfire-list');
+const searchButton = document.querySelector('.search-button'), showAllButton = document.querySelector('.show-all-button'), wildfireList = document.querySelector('#wildfire-list');
 let longitude = -118, latitude = 34
-//let markerLat = latitude, markerLong = longitude
 var mymap = L.map('mapid').setView([latitude, longitude], 9)
-var circle = L.circle([latitude, longitude], {radius: 600000})
 let marker
 var markersLayer = new L.LayerGroup();
 L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
@@ -11,6 +9,7 @@ L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {
 }).addTo(mymap);
 const mapBoxAuthToken = 'pk.eyJ1IjoiYW5kcmV3ZHlxdWlhMSIsImEiOiJja3FxYmRldzUxYngxMnhzYnczemx3dWNxIn0.tqOwapc6rVt23F1atNIrWw'
 let wildfireItems
+let allWildfiresShown
 let markerArr = []
 
 async function getMapBoxData(){
@@ -33,36 +32,31 @@ async function getMapBoxData(){
                 searchInput.value = ''
             }
         }
-        
         latitude = zipCodeLat
         longitude = zipCodeLong
         mymap.setView([latitude, longitude])
         markersLayer.clearLayers()
-
-        //remove all child elements in wildfire list container
-        while(wildfireList.firstChild) {
-            wildfireList.removeChild(wildfireList.lastChild)
-        }
-
+        removeAllChildren()
         getWildfireData(true)
 }
 
 async function getWildfireData(filtered){
-//fetches wildfire data from nasa in json
+    //fetches wildfire data from nasa in json
     const response = await fetch('https://eonet.sci.gsfc.nasa.gov/api/v2.1/categories/8');
     const data = await response.json();
     const wildfireEvents = data.events
     const filteredEvents = wildfireEvents.filter(event => event.geometries[0].coordinates[1] > latitude - 1 && event.geometries[0].coordinates[1] < latitude + 1 && event.geometries[0].coordinates[0] > longitude - 1 && event.geometries[0].coordinates[0] < longitude + 1)
-
+    //filters event if using zip code search, otherwise show all wildfires. addMarker function also creates children elements in wildfirelist parent.
     if(filtered){
-        addMarker(filteredEvents)
+        addMarker(filteredEvents)//add marker if within close distance of the zipcode coords
+        allWildfiresShown = false
     } else {
-        addMarker(wildfireEvents)
+        addMarker(wildfireEvents)//add all markers from nasa data
+        allWildfiresShown = true
     }
-
+    //add markers to map
     markersLayer.addTo(mymap)
-
-
+    //if there are no wildfires, add child element to wildfire list
     if(wildfireList.children.length == 0){
         createElements('There are no wildfires. When you search, make sure you add a valid zip code.', true)
     }
@@ -83,9 +77,8 @@ async function getWildfireData(filtered){
     }
 
     function createElements(title, noWildfires){
-        // creates new paragraph element as a child to the wildfire list div and inserts text
-            const newParagraph = document.createElement('p');
-            const newText = document.createTextNode(title);
+            // creates new paragraph element as a child to the wildfire list div and inserts text
+            const newParagraph = document.createElement('p'), newText = document.createTextNode(title)
             
             wildfireList.appendChild(newParagraph);
             newParagraph.appendChild(newText);
@@ -97,7 +90,6 @@ async function getWildfireData(filtered){
             }
             
         }
-        
         
     function centerMap(){
     // when clicking on a wildfire item, the map will move to the coordinates of that item and open a popup
@@ -117,6 +109,16 @@ async function getWildfireData(filtered){
                 markerArr[i].openPopup()
             }
         }   
+    }
+}
+
+function showAllWildfires(){
+    if(allWildfiresShown){
+        alert('All wildfires already shown.')
+    } else {
+        markersLayer.clearLayers()
+        removeAllChildren()
+        getWildfireData(false)
     }
 }
 
@@ -150,12 +152,20 @@ function cancelHighlight(e){
     }
 }
 
+function removeAllChildren(){
+    //remove all child elements in wildfire list container
+    while(wildfireList.firstChild) {
+        wildfireList.removeChild(wildfireList.lastChild)
+    }
+}
+
 window.addEventListener('click', cancelHighlight);
 // ['click','keydown'].forEach( evt => 
 //     searchButton.addEventListener(evt, getMapBoxData, false)
 // );
 searchButton.addEventListener('click', getMapBoxData)
-showAllButton.addEventListener('click', getWildfireData)
+showAllButton.addEventListener('click', showAllWildfires)
+
 getWildfireData(false)
 //refreshes page every hour
 setInterval(function(){ location.reload()}, 3600000)
@@ -163,11 +173,6 @@ setInterval(function(){ location.reload()}, 3600000)
 
 
 
-
-
-
-
 //THINGS TO DO
 
-//Have something to show in the wildfire list if no wildfires are found in searched radius
-//Reset wildfire list when conducting a zip code search
+//show all wildfires when clicking on a button designated for it
