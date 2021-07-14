@@ -27,6 +27,10 @@ body{
     margin-bottom: 30px;
 }
 
+.search-input{
+    width: 75px;
+}
+
 #mapid{
     margin-top: 2rem;
     height: 60vw;
