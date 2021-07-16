@@ -1,4 +1,4 @@
-const searchButton = document.querySelector('.search-button'), showAllButton = document.querySelector('.show-all-button'), wildfireList = document.querySelector('#wildfire-list');
+const searchButton = document.querySelector('.search-button'), showAllButton = document.querySelector('.show-all-button'), wildfireList = document.querySelector('#wildfire-list')
 let longitude = -118, latitude = 34//initial location is southern california
 var mymap = L.map('mapid').setView([latitude, longitude], 9)//initiate map
 let marker
@@ -6,7 +6,7 @@ var markersLayer = new L.LayerGroup();//creates a new object that places markers
 L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {//lay map tiles
     attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>',
     maxZoom: 13
-}).addTo(mymap);
+}).addTo(mymap)
 const mapBoxAuthToken = 'pk.eyJ1IjoiYW5kcmV3ZHlxdWlhMSIsImEiOiJja3FxYmRldzUxYngxMnhzYnczemx3dWNxIn0.tqOwapc6rVt23F1atNIrWw'
 let wildfireItems
 let allWildfiresShown
@@ -17,8 +17,8 @@ async function getMapBoxData(){
 
         assignValue()//need to place function here so that the desired zipcode is placed in the response variable
         
-        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?access_token=${mapBoxAuthToken}`);
-        const data = await response.json();
+        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?access_token=${mapBoxAuthToken}`)
+        const data = await response.json()
         const zipCodeLat = data.features[0].center[1]
         const zipCodeLong = data.features[0].center[0]
         
@@ -41,8 +41,8 @@ async function getMapBoxData(){
 
 async function getWildfireData(filtered){
     //fetches wildfire data from nasa in json
-    const response = await fetch('https://eonet.sci.gsfc.nasa.gov/api/v2.1/categories/8');
-    const data = await response.json();
+    const response = await fetch('https://eonet.sci.gsfc.nasa.gov/api/v2.1/categories/8')
+    const data = await response.json()
     const wildfireEvents = data.events
     const filteredEvents = wildfireEvents.filter(event => event.geometries[0].coordinates[1] > latitude - 1 && event.geometries[0].coordinates[1] < latitude + 1 && event.geometries[0].coordinates[0] > longitude - 1 && event.geometries[0].coordinates[0] < longitude + 1)//the search area for filtered events consists of one coordinate value higher and one lower for each of the specified coordinates
     
@@ -76,7 +76,7 @@ async function getWildfireData(filtered){
                 marker.bindPopup(wildfireEvents[i].title)//bind popup onto marker
                 marker.on('click', highlightSelectedWildfireItem);//add click event listener to marker
                 markersLayer.addLayer(marker)//add marker to layer group
-                createElements(events[i].title, false);//create paragraph element
+                createElements(events[i].title, false)//create paragraph element
         }
     }
 
@@ -98,9 +98,9 @@ async function getWildfireData(filtered){
         
     function centerMap(){
     // when clicking on a wildfire item, the map will move to the coordinates of that item and open a popup
-        wildfireItems = document.querySelectorAll('.wildfire-item');
-        wildfireItems.forEach(item => item.classList.remove('wildfire-item-border'));
-        this.classList.add('wildfire-item-border');
+        wildfireItems = document.querySelectorAll('.wildfire-item')
+        wildfireItems.forEach(item => item.classList.remove('wildfire-item-border'))
+        this.classList.add('wildfire-item-border')
 
         for(i = 0; i < markersLayer.getLayers().length; i++){
             const wildfirePopups = markersLayer.getLayers()[i]._popup._content
@@ -129,15 +129,15 @@ function showAllWildfires(){
 
 function highlightSelectedWildfireItem(e){
 // by clicking a marker, the wildfire item in the wildfire list corresponding to the marker is highlighted
-    wildfireItems = document.querySelectorAll('.wildfire-item');
-    var popup = e.target.getPopup();
-    var content = popup.getContent();
+    wildfireItems = document.querySelectorAll('.wildfire-item')
+    var popup = e.target.getPopup()
+    var content = popup.getContent()
     
     wildfireItems.forEach(item => item.classList.remove('wildfire-item-border'))//remove the wildfire item border class on every wildfire item
     // loops through wildfire items and compares content text to paragraph text. If there's a match, highlight the wildfire item in the wildfire list container
     for(i = 0; i < wildfireItems.length; i++){
         if(content == wildfireItems[i].innerText){
-            wildfireItems[i].classList.add('wildfire-item-border');
+            wildfireItems[i].classList.add('wildfire-item-border')
         }
     }
     
