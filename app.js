@@ -4,55 +4,52 @@ var mymap = L.map('mapid').setView([latitude, longitude], 9)//initiate map
 let marker
 var markersLayer = new L.LayerGroup();//creates a new object that places markers data inside
 L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {//lay map tiles
-    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>',
-    maxZoom: 13
+attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>',
+maxZoom: 13
 }).addTo(mymap)
 const mapBoxAuthToken = 'pk.eyJ1IjoiYW5kcmV3ZHlxdWlhMSIsImEiOiJja3FxYmRldzUxYngxMnhzYnczemx3dWNxIn0.tqOwapc6rVt23F1atNIrWw'
 let wildfireItems
 let allWildfiresShown
+const searchResults = document.querySelector('.search-results')
 
-async function getMapBoxData(){
-        const searchInput = document.querySelector('.search-input')
-        let zipCode = 92867//eventually set this to user location
 
-        assignValue()//need to place function here so that the desired zipcode is placed in the response variable
-        
-        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?access_token=${mapBoxAuthToken}`)
+async function getMapBoxData(searchQuery){
+        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${mapBoxAuthToken}`)//searchQuery is the text from search input
         const data = await response.json()
-        const zipCodeLat = data.features[0].center[1]
-        const zipCodeLong = data.features[0].center[0]
-        
-        function assignValue(){
-            if(searchInput.value == ''){//if empty return and alert
-                alert('please enter a zipcode')
-                return
-            } else{
-                zipCode = searchInput.value
-                searchInput.value = ''//reset value to no text
+        const searchResults = document.querySelector('.search-results')
+    
+        function retrieveSearchData(){
+            //for each feature, get the name, type, latitude, and longitude of a place
+            for(i = 0; i < data.features.length; i++){
+                const placeName = data.features[i].place_name
+                let placeType = data.features[i].place_type[0]
+                const searchLat = data.features[i].center[1]
+                const searchLong = data.features[i].center[0]
+                if(placeType == 'poi'){//poi isn't exactly the easiest to understand
+                    placeType = 'point of interest'
+                }
+                makeSearchItems(placeName, placeType, searchLat, searchLong)//create search item for each feature returned
             }
-        }//usage of global variables latitude and longitude as filteredEvents variable in getWildfireData function needs zipcode data
-        latitude = zipCodeLat
-        longitude = zipCodeLong
-        mymap.setView([latitude, longitude])//move map to coords
-        markersLayer.clearLayers()//remove all markers
-        removeAllChildren()//remove all children in wildfire list container
-        getWildfireData(true)
+        }
+        
+        retrieveSearchData()//searches for features and creates a dom element from the data found
 }
 
-async function getWildfireData(filtered){
+async function getWildfireData(filtered, searchClick, searchValue){
     //fetches wildfire data from nasa in json
     const response = await fetch('https://eonet.sci.gsfc.nasa.gov/api/v2.1/categories/8')
     const data = await response.json()
     const wildfireEvents = data.events
     const filteredEvents = wildfireEvents.filter(event => event.geometries[0].coordinates[1] > latitude - 1 && event.geometries[0].coordinates[1] < latitude + 1 && event.geometries[0].coordinates[0] > longitude - 1 && event.geometries[0].coordinates[0] < longitude + 1)//the search area for filtered events consists of one coordinate value higher and one lower for each of the specified coordinates
     
-    //filters event if using zip code search, otherwise show all wildfires. addMarker function also creates child elements in wildfirelist parent.
+    //filters event if using search, otherwise show all wildfires. addMarker function also creates child elements in wildfirelist parent.
     if(filtered && filteredEvents.length == wildfireEvents.length){//if filtered and the number of wildfire events is equal, set allWildfiresShown to true
         addMarker(wildfireEvents)//add all markers from nasa data
         allWildfiresShown = true//since filtered events length is the same as the raw data, this is the same as having all wildfires shown
     } else if(filtered){
-        addMarker(filteredEvents)//add marker if within close distance of the zipcode coords
+        addMarker(filteredEvents)//add marker if within close distance of the coords
         allWildfiresShown = false
+        
     } else {
         addMarker(wildfireEvents)//add all markers from nasa data
         allWildfiresShown = true
@@ -62,7 +59,7 @@ async function getWildfireData(filtered){
     markersLayer.addTo(mymap)
     //if there are no wildfires, add child element to wildfire list
     if(wildfireList.children.length == 0){
-        createElements('There are no wildfires. When you search, make sure you add a valid zip code.', true)
+        createWildfireItem('There are no wildfires here.', true)
     }
 
     function addMarker(events){
@@ -71,30 +68,29 @@ async function getWildfireData(filtered){
                 //coordinates from nasa wildfire data
                 const wildfireEventsLat = events[i].geometries[0].coordinates[1]
                 const wildfireEventsLong = events[i].geometries[0].coordinates[0]
-
+                
                 marker = L.marker([wildfireEventsLat, wildfireEventsLong])//create new marker object
-                marker.bindPopup(wildfireEvents[i].title)//bind popup onto marker
+                marker.bindPopup(events[i].title)//bind popup onto marker
                 marker.on('click', highlightSelectedWildfireItem);//add click event listener to marker
                 markersLayer.addLayer(marker)//add marker to layer group
-                createElements(events[i].title, false)//create paragraph element
+                createWildfireItem(events[i].title, false)//create paragraph element
         }
     }
 
-    function createElements(title, noWildfires){
-            // creates new paragraph element as a child to the wildfire list div and inserts text
-            const newParagraph = document.createElement('p'), newText = document.createTextNode(title)
+    function createWildfireItem(title, noWildfires){
+        // creates new paragraph element as a child to the wildfire list div and inserts text
+        const newParagraph = document.createElement('p'), newText = document.createTextNode(title)
             
-            wildfireList.appendChild(newParagraph)//add new paragraph child to wildfire list
-            newParagraph.appendChild(newText)//add text to newly created paragraph child
-            newParagraph.classList.add('wildfire-item')//add class
-            //if there are no wildfires, do not add centerMap function, otherwise add it
-            if(noWildfires){
-                return
-            } else {
-                newParagraph.addEventListener('click', centerMap)
-            }
-            
-        }
+        wildfireList.appendChild(newParagraph)//add new paragraph child to wildfire list
+        newParagraph.appendChild(newText)//add text to newly created paragraph child
+        newParagraph.classList.add('wildfire-item')//add class
+        //if there are no wildfires, do not add centerMap function, otherwise add it
+        if(noWildfires){
+            return
+        } else {
+            newParagraph.addEventListener('click', centerMap)
+        }        
+    }
         
     function centerMap(){
     // when clicking on a wildfire item, the map will move to the coordinates of that item and open a popup
@@ -113,17 +109,76 @@ async function getWildfireData(filtered){
             }
         } 
     }
+    
+    function retrieveWildfireData(searchClick, searchValue){
+        //if the search button is clicked, run function
+        if(searchClick){
+            const str = searchValue//search value is the search input's text
+            const regex = new RegExp(String.raw`\b${str}`, 'i')//matches the beginning of a word case-insensitive
+            //for each wildfire event, get the name, latitude, and longitude and pass on the data to make dom element
+            for(i = 0; i < wildfireEvents.length; i++){
+                const wildfireEventsLat = wildfireEvents[i].geometries[0].coordinates[1]
+                const wildfireEventsLong = wildfireEvents[i].geometries[0].coordinates[0]
+                const wildfireName = wildfireEvents[i].title
+                const placeName = wildfireName
+                //create dom element from wildfire data
+                if(regex.test(placeName)){
+                    makeSearchItems(placeName, 'wildfire', wildfireEventsLat, wildfireEventsLong)
+                }
+            }
+        } else {
+            return
+        }
+    }  
+
+    retrieveWildfireData(searchClick, searchValue)//searches for features and creates a dom element from the data found
 }
 
+function makeSearchItems(placeName, placeType, lat, long){
+
+    function makeSearchItem(placeName, placeType, lat, long){
+        //create dom element with the data from the apis
+        const ItemDiv = document.createElement('div'), newPlace = document.createTextNode(placeName), newType = document.createTextNode(placeType), PlaceDiv = document.createElement('div'), TypeDiv = document.createElement('div')
+
+        searchResults.appendChild(ItemDiv)
+        ItemDiv.classList.add('item', 'flex-container')
+        ItemDiv.appendChild(PlaceDiv)
+        ItemDiv.appendChild(TypeDiv)
+        PlaceDiv.appendChild(newPlace)
+        TypeDiv.appendChild(newType)
+        PlaceDiv.classList.add('search-location')
+        TypeDiv.classList.add('location-type')
+
+        ItemDiv.addEventListener('click', () => { acceptSearchQuery(lat, long) })//event listener for each item
+    }
+
+    function acceptSearchQuery(lat, long){
+        //if clicked, move map to the provided coords, remove all the markers, find if there are wildfires in area of coords and remove search results
+        latitude = lat
+        longitude = long
+        mymap.setView([latitude, longitude])//move map to coords
+        
+        markersLayer.clearLayers()//remove all markers
+        removeAllChildren(wildfireList)//remove all children in wildfire list container
+        getWildfireData(true, false)//1.attempting to make a filtered wildfire list, not trying to make new search result items
+        removeAllChildren(searchResults)//remove all search items
+        searchResults.classList.remove('active-results')//hide search results container
+    }
+
+    makeSearchItem(placeName, placeType, lat, long)//create search item after clicking search button
+}
+
+
 function showAllWildfires(){
-    //click event on button, show all wildfires if results are filtered from the zip code search
+    //click event on button, show all wildfires if results are filtered from search
 
     if(allWildfiresShown){//shows true if all wildfires in the raw data are displayed
         alert('All wildfires already shown.')
     } else {
         markersLayer.clearLayers()//remove all markers in the markersLayer
-        removeAllChildren()//remove the children in the wildfire list container
-        getWildfireData(false)//display all wildfires again
+        removeAllChildren(wildfireList)//remove the children in the wildfire list container
+        getWildfireData(false, false)//display all wildfires again
+        alert('All wildfires now showing')
     }
 }
 
@@ -143,31 +198,41 @@ function highlightSelectedWildfireItem(e){
     
 }
 
-/*function cancelHighlight(e){
-//checks if wildfire item border class is true, if yes check if it is clicking any of the elements that is not supposed to remove the highlight when clicked on, and if not, remove the class that gives the border style
-    wildfireItems = document.querySelectorAll('.wildfire-item');
-    for(i = 0; i < wildfireItems.length; i++){
-        if(wildfireItems[i].classList[2] == 'wildfire-item-border'){
-            if (e.target.classList[1] == 'wildfire-item' || e.target.id == 'mapid' || e.target.classList[0] == 'leaflet-marker-icon' || e.target.classList[0] == 'leaflet-popup-content' || e.target.classList[0] == 'leaflet-popup-content-wrapper'){
-                return;
-            } else {
-                wildfireItems.forEach(item => item.classList.remove('wildfire-item-border'));
-            }
-        } 
-    }
-}*/
-
-function removeAllChildren(){
-    //remove all child elements in wildfire list container
-    while(wildfireList.firstChild) {
-        wildfireList.removeChild(wildfireList.lastChild)
+function removeAllChildren(parent){
+    //remove all child elements of a parent container
+    while(parent.firstChild) {
+        parent.removeChild(parent.lastChild)
     }
 }
 
-//window.addEventListener('click', cancelHighlight);
-searchButton.addEventListener('click', getMapBoxData)
+async function getSearchData(){
+    const searchInput = document.querySelector('.search-input')
+    let searchQuery = 'Los Angeles'//eventually set this to user location
+
+    if(searchInput.value == ''){//if empty return an alert
+        alert('please enter text')
+        return
+    } else {
+        searchQuery = searchInput.value//search input becomes search query in api calls
+    }
+    
+
+    removeAllChildren(searchResults)//remove previous search's results
+
+    await getWildfireData(false, true, searchQuery)//1. not filtering, 2. trying to access wildfire data, 3.this is the text from the search input
+    await getMapBoxData(searchQuery)//uses text from search input
+    searchInput.value = ''//reset value to no text
+
+    //if there are no results from either api, say there are none, otherwise show search results
+    if(searchResults.children.length == 0){
+        alert('no wildfires or locations found in search')
+    } else if(searchResults.children.length > 0){
+        searchResults.classList.add('active-results')
+    }
+    
+}
+
+searchButton.addEventListener('click', getSearchData)
 showAllButton.addEventListener('click', showAllWildfires)
 
-getWildfireData(false)
-//refreshes page every hour
-setInterval(function(){ location.reload()}, 3600000)
+getWildfireData(false, false)//1. not filtering, 2. not trying to access wildfire data

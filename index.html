@@ -15,15 +15,19 @@
 </head>
 <body>
     <div class="container">
-        <h1 id="title">Wildfire List USA/CAN</h1>
-        <label for="area-search">Search area by zip code</label>
-        <input type="number" id="area-search" class='search-input' name="search" aria-label="Search through geocoding data">
-        <button class="search-button">Search</button>
-        <button class="show-all-button">Show All Wildfires</button>
+        <h1 id="title">Wildfire List</h1>
+        <div class="search-container">
+            <input type="text" id="area-search" class='search-input' name="search" placeholder="Search by wildfire name or location" aria-label="Search through geocoding data">
+            <div class="search-results"></div>
+            <div class="btn-container">
+                <button class="search-button btn">Search</button>
+                <button class="show-all-button btn">Show All Wildfires</button>
+            </div>
+        </div>
         <div id="mapid"></div>
         <div id="wildfire-list"></div>
     </div>
     <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
-    <script src="app.js"></script>
+    <script src="./app.js"></script>
 </body>
 </html>
