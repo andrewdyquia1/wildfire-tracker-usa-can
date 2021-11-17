@@ -3,7 +3,7 @@ let longitude = -118, latitude = 34//initial location is southern california
 var mymap = L.map('mapid').setView([latitude, longitude], 9)//initiate map
 let marker
 var markersLayer = new L.LayerGroup();//creates a new object that places markers data inside
-L.tileLayer('http://tile.stamen.com/terrain/{z}/{x}/{y}.png', {//lay map tiles
+L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {//lay map tiles
 attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>',
 maxZoom: 13
 }).addTo(mymap)
