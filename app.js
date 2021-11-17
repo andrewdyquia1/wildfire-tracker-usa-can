@@ -3,7 +3,7 @@ let longitude = -118, latitude = 34//initial location is southern california
 var mymap = L.map('mapid').setView([latitude, longitude], 9)//initiate map
 let marker
 var markersLayer = new L.LayerGroup();//creates a new object that places markers data inside
-L.tileLayer('http://tile.stamen.com/toner/{z}/{x}/{y}.png', {//lay map tiles
+L.tileLayer('http://tile.stamen.com/terrain/{z}/{x}/{y}.png', {//lay map tiles
 attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>',
 maxZoom: 13
 }).addTo(mymap)
@@ -16,7 +16,7 @@ const searchResults = document.querySelector('.search-results')
 async function getMapBoxData(searchQuery){
         const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${mapBoxAuthToken}`)//searchQuery is the text from search input
         const data = await response.json()
-        const searchResults = document.querySelector('.search-results')
+
     
         function retrieveSearchData(){
             //for each feature, get the name, type, latitude, and longitude of a place
