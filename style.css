@@ -22,6 +22,94 @@ body{
     margin: 0 auto;
 }
 
+.search-container{
+    width: 100%;
+    max-width: 600px;
+}
+
+.search-input{
+    width: 100%;
+    max-width: 600px;
+    padding: 10px 5px;
+    border: 0;
+    border-bottom: 1px solid black;
+}
+
+.loader{
+    display:none;
+    border: none;
+    box-shadow: 0 0 10px #aaa;
+    padding: 10px 0;
+}
+
+.loader-active{
+    display:block;
+}
+
+.search-results{
+    display: none;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 0 10px #aaa;
+    max-height: 200px;
+    overflow: scroll;
+}
+
+.search-item {
+    cursor: pointer;
+}
+
+.search-item:hover {
+    background:#ddd;
+}
+
+.search-location{
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.location-type{
+    font-size: 0.9rem;
+    color:rgb(88, 86, 86);
+    font-style: italic;
+}
+
+.active-results{
+    display: block;
+}
+
+.highlighted-item{
+    background-color: #ddd;
+}
+
+
+.flex-container{
+    text-align: start;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: start;
+    border-bottom: 1px solid black;
+    padding: 15px 25px;
+}
+
+
+
+.btn-container{
+    padding: 10px 0;
+}
+
+.btn{
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    background: #ddd;
+}
+
+
 #title{
     margin-bottom: 30px;
 }
@@ -33,7 +121,7 @@ body{
     box-shadow: 0 0 10px #aaa;
 }
 
-#wildfire-list{
+#wildfire-table{
     margin: 0 auto;
     margin-top: 2rem;
     width: 80vw;
@@ -58,72 +146,6 @@ body{
     border: 5px solid red;
 }
 
-
-.search-container{
-    width: 100%;
-    max-width: 600px;
-}
-
-.search-input{
-    width: 100%;
-    max-width: 600px;
-    padding: 10px 5px;
-    border: 0;
-    border-bottom: 1px solid black;
-}
-
-.search-results{
-    display: none;
-    width: 100%;
-    max-width: 600px;
-    box-shadow: 0 0 10px #aaa;
-    max-height: 200px;
-    overflow: scroll;
-}
-
-.active-results{
-    display: block;
-}
-
-.btn-container{
-    padding: 10px 0;
-}
-
-.btn{
-    padding: 10px;
-    cursor: pointer;
-    border-radius: 5px;
-    border: none;
-    background: #ddd;
-}
-
-.flex-container{
-    text-align: start;
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    align-items: start;
-    border-bottom: 1px solid black;
-    padding: 15px 25px;
-    cursor: pointer;
-}
-
-.flex-container:hover{
-    background: #ddd;
-}
-
-.search-location{
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.location-type{
-    font-size: 0.9rem;
-    color:rgb(88, 86, 86);
-    font-style: italic;
-}
 
 @media(min-width: 800px){
     #mapid{
