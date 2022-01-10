@@ -48,68 +48,73 @@ async function getMapBoxData(searchQuery) {
 
 let wildfireArray = []; // stores wildfire data
 
+
+
+// https://eonet.sci.gsfc.nasa.gov/api/v3/categories/8
+// https://eonet.gsfc.nasa.gov/api/v3/categories/8
 async function getWildfireData() {
   //fetches wildfire data from nasa in json
-  const response = await fetch("https://eonet.sci.gsfc.nasa.gov/api/v2.1/categories/8");
+  const response = await fetch("https://eonet.gsfc.nasa.gov/api/v3/categories/8");
   const data = await response.json();
   const wildfireEvents = data.events;
-  
   // get necessary data 
   for (i = 0; i < wildfireEvents.length; i++) {
+    // console.log(data)
     wildfireArray.push({
       title: wildfireEvents[i].title,
-      latitude: wildfireEvents[i].geometries[0].coordinates[1],
-      longitude: wildfireEvents[i].geometries[0].coordinates[0],
+      latitude: wildfireEvents[i].geometry[0].coordinates[1],
+      longitude: wildfireEvents[i].geometry[0].coordinates[0],
     });
+    createMapAndTableItems(wildfireEvents[i].title)
   }
   
-  createMapAndTableItems(false)
   wildfireDataLoaded = true
 }
 
-function createMapAndTableItems(filtered) {
-  const filteredEvents = wildfireArray.filter(
-    (event) =>
-      event.latitude > latitude - 1 &&
-      event.latitude < latitude + 1 &&
-      event.longitude > longitude - 1 &&
-      event.longitude < longitude + 1
-  ); //the search area for filtered events consists of one coordinate value higher and one lower for each of the specified coordinates
+function createMapAndTableItems(wildfire) {
+  // const filteredEvents = wildfireArray.filter(
+  //   (event) =>
+  //     event.latitude > latitude - 1 &&
+  //     event.latitude < latitude + 1 &&
+  //     event.longitude > longitude - 1 &&
+  //     event.longitude < longitude + 1
+  // ); //the search area for filtered events consists of one coordinate value higher and one lower for each of the specified coordinates
 
-  //filters event if using search, otherwise show all wildfires. addMarker function also creates child elements in wildfirelist parent.
-  if (filtered && filteredEvents.length == wildfireArray.length) {//if filtered and the number of wildfire events is equal, set allWildfiresShown to true
-    addMarker(wildfireArray); //add all markers from nasa data
-    allWildfiresShown = true; //since filtered events length is the same as the raw data, this is the same as having all wildfires shown
-  } else if (filtered) {
-    addMarker(filteredEvents); //add marker if within close distance of the coords
-    allWildfiresShown = false;
-  } else if(filtered == false){
-    addMarker(wildfireArray); //add all markers from nasa data
-    allWildfiresShown = true;
-  }
+  // //filters event if using search, otherwise show all wildfires. addMarker function also creates child elements in wildfirelist parent.
+  // if (filtered && filteredEvents.length == wildfireArray.length) {//if filtered and the number of wildfire events is equal, set allWildfiresShown to true
+  //   addMarker(wildfireArray); //add all markers from nasa data
+  //   allWildfiresShown = true; //since filtered events length is the same as the raw data, this is the same as having all wildfires shown
+  // } else if (filtered) {
+  //   addMarker(filteredEvents); //add marker if within close distance of the coords
+  //   allWildfiresShown = false;
+  // } else if(filtered == false){
+  //   addMarker(wildfireArray); //add all markers from nasa data
+  //   allWildfiresShown = true;
+  // }
 
-  //add markers to map
-  markersLayer.addTo(mymap);
-  //if there are no wildfires, add child element to wildfire list denoting no wildfires in search area
-  if (wildfireTable.children.length == 0) {
-    createWildfireTableitem("There are no wildfires here.", true);
-  }
+  // //add markers to map
+  // markersLayer.addTo(mymap);
+  // //if there are no wildfires, add child element to wildfire list denoting no wildfires in search area
+  // if (wildfireTable.children.length == 0) {
+  //   createWildfireTableItem("There are no wildfires here.", true);
+  // }
 
+  addMarker(wildfire)
   function addMarker(events) {
     //for loop adding markers for searched wildfire events, binding popups to them, then creating child elements in the wildfireTable parent
-    for (i = 0; i < events.length; i++) {
-      //coordinates from nasa wildfire data
-      const wildfireEventsLat = events[i].latitude;
-      const wildfireEventsLong = events[i].longitude;
-      marker = L.marker([wildfireEventsLat, wildfireEventsLong]); //create new marker object
-      marker.bindPopup(events[i].title); //bind popup onto marker
-      marker.on("click", highlightSelectedWildfireItem); //add click event listener to marker
-      markersLayer.addLayer(marker); //add marker to layer group
-      createWildfireTableitem(events[i].title, false); //create paragraph element
-    }
+    // for (i = 0; i < events.length; i++) {
+    //   //coordinates from nasa wildfire data
+    //   const wildfireEventsLat = events[i].latitude;
+    //   const wildfireEventsLong = events[i].longitude;
+      // marker = L.marker([wildfireEventsLat, wildfireEventsLong]); //create new marker object
+      // marker.bindPopup(events); //bind popup onto marker
+      // marker.on("click", highlightSelectedWildfireItem); //add click event listener to marker
+      // markersLayer.addLayer(marker); //add marker to layer group
+      createWildfireTableItem(events, false); //create paragraph element
+    // }
   }
 
-  function createWildfireTableitem(title, noWildfires) {
+  function createWildfireTableItem(title, noWildfires) {
     // creates new paragraph element as a child to the wildfire list div and inserts text
     const newParagraph = document.createElement("p"),
       newText = document.createTextNode(title);
