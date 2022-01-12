@@ -7,19 +7,19 @@ let searchComplete;
 
 let longitude = -118,
   latitude = 34; //initial location is southern california
-// var mymap = L.map("mapid").setView([latitude, longitude], 9); //initiate map
+var mymap = L.map("mapid").setView([latitude, longitude], 9); //initiate map
 let marker;
 var markersLayer = new L.LayerGroup(); //creates a new object that places markers data inside
 const mapBoxAuthToken =
   "pk.eyJ1IjoiYW5kcmV3ZHlxdWlhMSIsImEiOiJja3FxYmRldzUxYngxMnhzYnczemx3dWNxIn0.tqOwapc6rVt23F1atNIrWw";
-//   L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-//     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-//     maxZoom: 18,
-//     id: 'mapbox/streets-v11',
-//     tileSize: 512,
-//     zoomOffset: -1,
-//     accessToken: mapBoxAuthToken,
-// }).addTo(mymap);
+  L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    maxZoom: 18,
+    id: 'mapbox/streets-v11',
+    tileSize: 512,
+    zoomOffset: -1,
+    accessToken: mapBoxAuthToken,
+}).addTo(mymap);
 let wildfireItems;
 let allWildfiresShown;
 const searchResults = document.querySelector(".search-results");
@@ -52,7 +52,7 @@ let wildfireArray = []; // stores wildfire data
 
 async function getWildfireData() {
   //fetches wildfire data from nasa in json
-  const response = await fetch("https://eonet.gsfc.nasa.gov/api/v3/categories/8");
+  const response = await fetch("https://eonet.gsfc.nasa.gov/api/v3/categories/wildfires");
   const data = await response.json();
   const wildfireEvents = data.events;
   // get necessary data 
