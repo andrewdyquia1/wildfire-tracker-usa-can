@@ -27,10 +27,10 @@ const searchResults = document.querySelector(".search-results");
 async function getMapBoxData(searchQuery) {
   const encodedSearchQuery = encodeURIComponent(searchQuery)
   const response = await fetch(
-    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedSearchQuery}.json?access_token=${mapBoxAuthToken}`
+    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedSearchQuery}.json?country=us%2Cpr%2Cas%2Cvi%2Cgu%2Cmp&access_token=${mapBoxAuthToken}`
   ); //searchQuery is the text from search input
   const data = await response.json();
-
+    console.log(data)
   function retrieveSearchData() {
     //for each feature, get the name, type, latitude, and longitude of a place
     for (i = 0; i < data.features.length; i++) {
@@ -49,19 +49,20 @@ async function getMapBoxData(searchQuery) {
 }
 
 let wildfireArray = []; // stores wildfire data
+ 
+
 
 async function getWildfireData() {
   //fetches wildfire data from nasa in json
-  const response = await fetch("https://eonet.gsfc.nasa.gov/api/v3/categories/wildfires");
+  const response = await fetch('https://opendata.arcgis.com/datasets/9838f79fb30941d2adde6710e9d6b0df_0.geojson');
   const data = await response.json();
-  const wildfireEvents = data.events;
-  // get necessary data 
+  const wildfireEvents = data.features;
+  //get necessary data 
   for (i = 0; i < wildfireEvents.length; i++) {
-    // console.log(data)
     wildfireArray.push({
-      title: wildfireEvents[i].title,
-      latitude: wildfireEvents[i].geometry[0].coordinates[1],
-      longitude: wildfireEvents[i].geometry[0].coordinates[0],
+      title: wildfireEvents[i].properties.IncidentName,
+      latitude: wildfireEvents[i].geometry.coordinates[1],
+      longitude: wildfireEvents[i].geometry.coordinates[0],
     });
   }
   
